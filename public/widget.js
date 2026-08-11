@@ -107,12 +107,13 @@
         body: JSON.stringify({ message: message, config: config, history: previous })
       });
       var data = await response.json();
+      if (!response.ok) throw new Error(data.error || "OpenAI no pudo responder");
       typing.remove();
       addMessage("assistant", data.reply || "¿Quieres que te conecte con el equipo?");
       if (/comprar|interesa|pedido|precio|siguiente paso/i.test(message + " " + (data.reply || ""))) showCta();
     } catch (_) {
       typing.remove();
-      addMessage("assistant", "No pude responder en este momento. Puedes continuar directamente con el equipo.");
+      addMessage("assistant", "No pude usar ChatGPT ahora. Puedes continuar directamente con el equipo por WhatsApp.");
       showCta();
     } finally {
       busy = false;
