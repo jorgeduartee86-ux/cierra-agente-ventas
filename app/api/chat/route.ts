@@ -1,6 +1,3 @@
-import { getSetting } from "../../../db/client";
-import { readOpenAIConnection } from "../../../lib/openai-connection";
-
 type AgentConfig = {
   agentName?: string;
   businessName?: string;
@@ -94,16 +91,7 @@ export async function POST(request: Request) {
       return Response.json({ error: "Escribe un mensaje para continuar." }, { status: 400, headers: corsHeaders });
     }
 
-    let apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      try {
-        const globalConnection = await getSetting("openai_connection");
-        if (globalConnection) apiKey = await readOpenAIConnection(globalConnection);
-      } catch {
-        // Keep the local demo available when persistent settings are unavailable.
-      }
-    }
-
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return Response.json({ reply: localReply(message, config), mode: "demo" }, { headers: corsHeaders });
     }

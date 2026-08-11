@@ -8,11 +8,6 @@ import {
   ChevronDown,
   Code2,
   Copy,
-  Eye,
-  EyeOff,
-  KeyRound,
-  LoaderCircle,
-  LockKeyhole,
   MessageCircle,
   Send,
   ShieldCheck,
@@ -163,13 +158,7 @@ function ProductStudio() {
   const [tab, setTab] = useState<StudioTab>("config");
   const [copied, setCopied] = useState(false);
   const [origin, setOrigin] = useState("https://tu-agente.com");
-  const [showApiModal, setShowApiModal] = useState(false);
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [apiKey, setApiKey] = useState("");
-  const [connectState, setConnectState] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [connectError, setConnectError] = useState("");
   const [openAIConnected, setOpenAIConnected] = useState(false);
-  const [canManageOpenAI, setCanManageOpenAI] = useState(true);
 
   useEffect(() => {
     setOrigin(window.location.origin);
@@ -179,9 +168,8 @@ function ProductStudio() {
     }
     void fetch("/api/openai/status", { cache: "no-store" })
       .then((response) => response.json())
-      .then((status: { connected?: boolean; canManage?: boolean }) => {
+      .then((status: { connected?: boolean }) => {
         setOpenAIConnected(Boolean(status.connected));
-        setCanManageOpenAI(status.canManage !== false);
       })
       .catch(() => { /* the demo stays available */ });
   }, []);
@@ -189,19 +177,6 @@ function ProductStudio() {
   useEffect(() => {
     window.localStorage.setItem("cierra-agent-config", JSON.stringify(config));
   }, [config]);
-
-  useEffect(() => {
-    if (!showApiModal) return;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && connectState !== "loading") closeApiModal();
-    };
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [showApiModal, connectState]);
 
   const snippet = useMemo(() => {
     const encoded = encodeConfig(config);
@@ -216,45 +191,6 @@ function ProductStudio() {
     await navigator.clipboard.writeText(snippet);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1800);
-  }
-
-  function openApiModal() {
-    setApiKey("");
-    setConnectError("");
-    setConnectState("idle");
-    setShowApiKey(false);
-    setShowApiModal(true);
-  }
-
-  function closeApiModal() {
-    setApiKey("");
-    setConnectError("");
-    setConnectState("idle");
-    setShowApiModal(false);
-  }
-
-  async function connectOpenAI(event: FormEvent) {
-    event.preventDefault();
-    if (!apiKey.trim() || connectState === "loading") return;
-    setConnectState("loading");
-    setConnectError("");
-
-    try {
-      const response = await fetch("/api/openai/connect", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey: apiKey.trim() }),
-      });
-      const data = await response.json() as { connected?: boolean; canManage?: boolean; error?: string };
-      if (!response.ok || !data.connected) throw new Error(data.error || "No pudimos conectar OpenAI.");
-      setOpenAIConnected(true);
-      setCanManageOpenAI(data.canManage !== false);
-      setApiKey("");
-      setConnectState("success");
-    } catch (error) {
-      setConnectError(error instanceof Error ? error.message : "No pudimos conectar OpenAI.");
-      setConnectState("error");
-    }
   }
 
   return (
@@ -274,12 +210,11 @@ function ProductStudio() {
           </div>
 
           <div className={`ai-connection ${openAIConnected ? "connected" : ""}`}>
-            <div className="ai-connection-icon">{openAIConnected ? <Check size={19} /> : <KeyRound size={19} />}</div>
+            <div className="ai-connection-icon">{openAIConnected ? <Check size={19} /> : <Bot size={19} />}</div>
             <div className="ai-connection-copy">
-              <strong>{openAIConnected ? "Tu cuenta de OpenAI está activa para todos los vendedores" : "Conecta tu OpenAI para activar todos los vendedores"}</strong>
-              <span>{openAIConnected ? "Cada producto y cada cliente usarán esta misma cuenta para responder y consumir tokens." : "Pega tu clave una sola vez. Quedará protegida en el servidor y no aparecerá en los widgets."}</span>
+              <strong>{openAIConnected ? "Tu cuenta de OpenAI está activa para todos los vendedores" : "OpenAI todavía no está conectado"}</strong>
+              <span>{openAIConnected ? "Cada producto y cada cliente usan esta misma cuenta para responder y consumir tokens." : "La conexión se administra de forma privada desde el servidor."}</span>
             </div>
-            {canManageOpenAI && <button type="button" onClick={openApiModal}>{openAIConnected ? "Cambiar clave" : "Pegar mi API"}</button>}
           </div>
 
           {tab === "config" && (
@@ -336,52 +271,6 @@ function ProductStudio() {
         </aside>
       </div>
 
-      {showApiModal && (
-        <div className="api-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && connectState !== "loading") closeApiModal(); }}>
-          <section className="api-modal" role="dialog" aria-modal="true" aria-labelledby="api-modal-title">
-            <button className="api-modal-close" type="button" onClick={closeApiModal} disabled={connectState === "loading"} aria-label="Cerrar ventana"><X size={20} /></button>
-            {connectState === "success" ? (
-              <div className="api-success">
-                <div className="api-success-icon"><Check size={27} /></div>
-                <span className="eyebrow">Conexión lista</span>
-                <h3 id="api-modal-title">ChatGPT ya es tu vendedor.</h3>
-                <p>La clave quedó protegida en el servidor. Desde ahora, todos los productos y clientes que configures usarán tu cuenta de OpenAI.</p>
-                <button className="primary-button" type="button" onClick={closeApiModal}>Empezar a vender <ArrowRight size={18} /></button>
-              </div>
-            ) : (
-              <form onSubmit={connectOpenAI}>
-                <div className="api-modal-mark"><Sparkles size={23} /></div>
-                <span className="eyebrow">Conectar OpenAI</span>
-                <h3 id="api-modal-title">Activa el cerebro de tu vendedor.</h3>
-                <p className="api-modal-intro">Pega tu clave una sola vez. Esta cuenta pagará los tokens de todos los vendedores que configures.</p>
-                <label className="api-key-label" htmlFor="openai-api-key">Clave API de OpenAI</label>
-                <div className="api-key-field">
-                  <KeyRound size={18} />
-                  <input
-                    id="openai-api-key"
-                    type={showApiKey ? "text" : "password"}
-                    value={apiKey}
-                    onChange={(event) => setApiKey(event.target.value)}
-                    placeholder="sk-..."
-                    autoComplete="off"
-                    autoFocus
-                    disabled={connectState === "loading"}
-                  />
-                  <button type="button" onClick={() => setShowApiKey((current) => !current)} aria-label={showApiKey ? "Ocultar clave" : "Mostrar clave"}>
-                    {showApiKey ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-                <div className="api-security-note"><LockKeyhole size={17} /><span><strong>Tu clave no se guarda en el navegador.</strong> Queda cifrada en el servidor y nunca se copia en los productos ni en sus widgets.</span></div>
-                {connectError && <div className="api-error" role="alert">{connectError}</div>}
-                <button className="primary-button api-connect-button" type="submit" disabled={!apiKey.trim() || connectState === "loading"}>
-                  {connectState === "loading" ? <><LoaderCircle className="spin" size={18} /> Validando con OpenAI…</> : <>Conectar y activar <ArrowRight size={18} /></>}
-                </button>
-                <a className="api-help-link" href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer">¿Todavía no tienes una clave? Créala en OpenAI <ArrowRight size={14} /></a>
-              </form>
-            )}
-          </section>
-        </div>
-      )}
     </section>
   );
 }
