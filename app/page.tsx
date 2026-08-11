@@ -177,7 +177,7 @@ function ProductStudio() {
     if (saved) {
       try { setConfig({ ...defaultConfig, ...JSON.parse(saved) }); } catch { /* use defaults */ }
     }
-    void fetch("/api/openai/connect", { cache: "no-store" })
+    void fetch("/api/openai/status", { cache: "no-store" })
       .then((response) => response.json())
       .then((status: { connected?: boolean; canManage?: boolean }) => {
         setOpenAIConnected(Boolean(status.connected));

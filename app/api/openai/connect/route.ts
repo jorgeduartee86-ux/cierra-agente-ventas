@@ -1,50 +1,16 @@
 import { getSetting, setSetting } from "../../../../db/client";
+import {
+  canManageOpenAI,
+  hashAdminToken,
+  OPENAI_ADMIN_COOKIE,
+  OPENAI_ADMIN_HASH_KEY,
+  OPENAI_CONNECTION_KEY,
+  toBase64Url,
+} from "../../../../lib/openai-admin";
 import { createOpenAIConnection } from "../../../../lib/openai-connection";
-
-const CONNECTION_KEY = "openai_connection";
-const ADMIN_HASH_KEY = "openai_admin_hash";
-const ADMIN_COOKIE = "cierra_openai_admin";
 
 function safeApiKey(value: unknown) {
   return typeof value === "string" ? value.trim().slice(0, 300) : "";
-}
-
-function toBase64Url(bytes: Uint8Array) {
-  let binary = "";
-  for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
-}
-
-async function hashToken(token: string) {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
-  return toBase64Url(new Uint8Array(digest));
-}
-
-function readCookie(request: Request, name: string) {
-  const cookieHeader = request.headers.get("cookie") || "";
-  for (const cookie of cookieHeader.split(";")) {
-    const [key, ...value] = cookie.trim().split("=");
-    if (key === name) return decodeURIComponent(value.join("="));
-  }
-  return "";
-}
-
-async function canManage(request: Request, savedAdminHash: string | null) {
-  if (!savedAdminHash) return true;
-  const token = readCookie(request, ADMIN_COOKIE);
-  return token ? await hashToken(token) === savedAdminHash : false;
-}
-
-export async function GET(request: Request) {
-  try {
-    const [connection, adminHash] = await Promise.all([
-      getSetting(CONNECTION_KEY),
-      getSetting(ADMIN_HASH_KEY),
-    ]);
-    return Response.json({ connected: Boolean(connection), canManage: await canManage(request, adminHash) });
-  } catch {
-    return Response.json({ connected: Boolean(process.env.OPENAI_API_KEY), canManage: true });
-  }
 }
 
 export async function POST(request: Request) {
@@ -54,8 +20,8 @@ export async function POST(request: Request) {
       return Response.json({ error: "Solicitud no permitida." }, { status: 403 });
     }
 
-    const savedAdminHash = await getSetting(ADMIN_HASH_KEY);
-    if (!await canManage(request, savedAdminHash)) {
+    const savedAdminHash = await getSetting(OPENAI_ADMIN_HASH_KEY);
+    if (!await canManageOpenAI(request, savedAdminHash)) {
       return Response.json({ error: "Esta conexión solo puede cambiarse desde el navegador que la configuró." }, { status: 403 });
     }
 
@@ -79,14 +45,14 @@ export async function POST(request: Request) {
     }
 
     const connection = await createOpenAIConnection(apiKey);
-    await setSetting(CONNECTION_KEY, connection);
+    await setSetting(OPENAI_CONNECTION_KEY, connection);
 
     const headers = new Headers();
     if (!savedAdminHash) {
       const adminToken = toBase64Url(crypto.getRandomValues(new Uint8Array(32)));
-      await setSetting(ADMIN_HASH_KEY, await hashToken(adminToken));
+      await setSetting(OPENAI_ADMIN_HASH_KEY, await hashAdminToken(adminToken));
       const secure = new URL(request.url).protocol === "https:" ? "; Secure" : "";
-      headers.set("Set-Cookie", `${ADMIN_COOKIE}=${encodeURIComponent(adminToken)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=31536000${secure}`);
+      headers.set("Set-Cookie", `${OPENAI_ADMIN_COOKIE}=${encodeURIComponent(adminToken)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=31536000${secure}`);
     }
 
     return Response.json({ connected: true, canManage: true }, { headers });
