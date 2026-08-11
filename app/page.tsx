@@ -49,6 +49,12 @@ const defaultConfig: AgentConfig = {
 
 const quickQuestions = ["¿Qué incluye?", "¿Cuánto cuesta?", "Quiero comprar"];
 
+function apiUrl(path: string) {
+  if (typeof window === "undefined") return path;
+  const apiOrigin = (window as Window & { __CIERRA_API_ORIGIN__?: string }).__CIERRA_API_ORIGIN__ || "";
+  return `${apiOrigin}${path}`;
+}
+
 function encodeConfig(config: AgentConfig) {
   if (typeof window === "undefined") return "";
   const bytes = new TextEncoder().encode(JSON.stringify(config));
@@ -88,7 +94,7 @@ function ChatPreview({ config, compact = false }: { config: AgentConfig; compact
     setInput("");
     setLoading(true);
     try {
-      const response = await fetch("/api/chat", {
+      const response = await fetch(apiUrl("/api/chat"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message, config, history: previous }),
@@ -161,12 +167,12 @@ function ProductStudio() {
   const [openAIConnected, setOpenAIConnected] = useState(false);
 
   useEffect(() => {
-    setOrigin(window.location.origin);
+    setOrigin((window as Window & { __CIERRA_API_ORIGIN__?: string }).__CIERRA_API_ORIGIN__ || window.location.origin);
     const saved = window.localStorage.getItem("cierra-agent-config");
     if (saved) {
       try { setConfig({ ...defaultConfig, ...JSON.parse(saved) }); } catch { /* use defaults */ }
     }
-    void fetch("/api/openai/status", { cache: "no-store" })
+    void fetch(apiUrl("/api/openai/status"), { cache: "no-store" })
       .then((response) => response.json())
       .then((status: { connected?: boolean }) => {
         setOpenAIConnected(Boolean(status.connected));

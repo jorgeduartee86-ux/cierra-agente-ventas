@@ -10,10 +10,10 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+pages-dist
 .next
 .vinext
 .wrangler
-.firebase
 *.tgz
 *.tsbuildinfo
 .env
@@ -25,10 +25,6 @@ dist-ssr
 /src/
 /index.html
 /test_groq.js
-/.firebaserc
-/firebase.json
-/firestore.indexes.json
-/firestore.rules
 
 # Editor directories and files
 .vscode/*
