@@ -1,0 +1,42 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+.next
+.vinext
+.wrangler
+.firebase
+*.tgz
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+*.local
+
+# Versión anterior conservada localmente como referencia
+/src/
+/index.html
+/test_groq.js
+/.firebaserc
+/firebase.json
+/firestore.indexes.json
+/firestore.rules
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
