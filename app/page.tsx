@@ -199,6 +199,14 @@ function ProductStudio() {
     window.setTimeout(() => setCopied(false), 1800);
   }
 
+  function openTestPage() {
+    const testWindow = window.open("", "_blank", "noopener,noreferrer");
+    if (!testWindow) return;
+    const title = `${config.agentName} — ${config.productName}`;
+    testWindow.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><style>body{margin:0;background:#f4efe7;color:#27231f;font-family:Arial,sans-serif}main{max-width:760px;margin:0 auto;padding:56px 24px}h1{font-size:clamp(32px,6vw,58px);line-height:1.02;margin:0 0 16px}p{font-size:18px;line-height:1.6;color:#665d53}.demo{margin-top:32px;padding:22px;border:1px solid #ded4c8;border-radius:20px;background:#fffaf4}.demo strong{display:block;margin-bottom:8px}.demo span{color:#8a7d70;font-size:14px}</style></head><body><main><div class="demo"><strong>Prueba del vendedor</strong><span>Esta es una página de ejemplo. Abre el botón de chat para conversar con ${config.agentName}.</span></div><h1>${config.productName}</h1><p>${config.description || "Conoce el producto y pregunta lo que necesites."}</p>${snippet}</main></body></html>`);
+    testWindow.document.close();
+  }
+
   return (
     <section className="studio-section" id="crear">
       <div className="section-heading">
@@ -259,8 +267,9 @@ function ProductStudio() {
               <div className="success-icon"><Check size={28} /></div>
               <span className="eyebrow">Agente listo</span>
               <h3>Pégalo una vez. Déjalo vender.</h3>
-              <p>Copia esta línea antes de cerrar la etiqueta <code>&lt;/body&gt;</code> de la página de tu cliente.</p>
-              <div className="code-box"><code>{snippet}</code><button onClick={() => void copySnippet()} aria-label="Copiar código">{copied ? <Check size={17} /> : <Copy size={17} />}{copied ? "Copiado" : "Copiar"}</button></div>
+              <p>Primero pruébalo en una página de ejemplo. Cuando te guste, copia el código y pégalo antes de cerrar la etiqueta <code>&lt;/body&gt;</code> de la página de tu cliente.</p>
+              <div className="install-actions"><button className="primary-button" onClick={openTestPage}><Bot size={17} /> Probar en una página</button><button className="secondary-button" onClick={() => void copySnippet()}>{copied ? <Check size={17} /> : <Copy size={17} />}{copied ? "Código copiado" : "Copiar código"}</button></div>
+              <div className="code-box"><code>{snippet}</code></div>
               <div className="install-notes"><span><Check size={16} /> Aparece como botón flotante</span><span><Check size={16} /> Funciona en celular</span><span><Check size={16} /> Lleva cierres a WhatsApp</span></div>
               <button className="secondary-button" onClick={() => setTab("config")}>Seguir editando</button>
             </div>
