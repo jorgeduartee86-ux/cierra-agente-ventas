@@ -61,7 +61,8 @@ function apiUrl(path: string) {
 
 function encodeConfig(config: AgentConfig) {
   if (typeof window === "undefined") return "";
-  const bytes = new TextEncoder().encode(JSON.stringify(config));
+  const compact = { b: config.businessName, a: config.agentName, p: config.productName, r: config.price, d: config.description, k: config.knowledge, t: config.tone, c: config.ctaLabel, w: config.whatsapp, i: config.instructions, v: config.avatarData };
+  const bytes = new TextEncoder().encode(JSON.stringify(compact));
   let binary = "";
   bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
   return window.btoa(binary);
@@ -171,6 +172,7 @@ function ProductStudio() {
   const [config, setConfig] = useState<AgentConfig>(defaultConfig);
   const [tab, setTab] = useState<StudioTab>("config");
   const [copied, setCopied] = useState(false);
+  const [promptCopied, setPromptCopied] = useState(false);
   const [origin, setOrigin] = useState("https://tu-agente.com");
   const [openAIConnected, setOpenAIConnected] = useState(false);
 
@@ -197,6 +199,21 @@ function ProductStudio() {
     return `<script src="${origin}/widget.js" data-cierra="${encoded}" defer></script>`;
   }, [config, origin]);
 
+  const installPrompt = useMemo(() => `Instala este agente de ventas en mi página web.
+
+Código del agente:
+${snippet}
+
+Ubicación: colócalo justo antes de la etiqueta </body>. Debe aparecer como un botón flotante en la esquina inferior derecha, sin tapar el contenido ni el botón de compra de la página.
+
+Requisitos:
+- Conserva el diseño actual de la página y no reemplaces su contenido.
+- Carga el script una sola vez y déjalo funcionar en escritorio y móvil.
+- Verifica que el chat abra, muestre el logo del negocio y pueda responder preguntas.
+- No expongas ninguna clave API ni la muevas al código del navegador.
+- Si la página usa React, Next, Shopify, WordPress o HTML, adapta la instalación al lugar correcto sin duplicar el script.
+- Después de instalarlo, prueba una pregunta, una consulta de precio y el botón de contacto.` , [snippet]);
+
   function update<K extends keyof AgentConfig>(field: K, value: AgentConfig[K]) {
     setConfig((current) => ({ ...current, [field]: value }));
   }
@@ -205,6 +222,12 @@ function ProductStudio() {
     await navigator.clipboard.writeText(snippet);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1800);
+  }
+
+  async function copyPrompt() {
+    await navigator.clipboard.writeText(installPrompt);
+    setPromptCopied(true);
+    window.setTimeout(() => setPromptCopied(false), 1800);
   }
 
   function readSkillFile(file: File) {
@@ -290,7 +313,7 @@ function ProductStudio() {
               <span className="eyebrow">Agente listo</span>
               <h3>Pégalo una vez. Déjalo vender.</h3>
               <p>Primero pruébalo en una página de ejemplo. Cuando te guste, copia el código y pégalo antes de cerrar la etiqueta <code>&lt;/body&gt;</code> de la página de tu cliente.</p>
-              <div className="install-actions"><button className="primary-button" onClick={openTestPage}><Bot size={17} /> Probar en una página</button><button className="secondary-button" onClick={() => void copySnippet()}>{copied ? <Check size={17} /> : <Copy size={17} />}{copied ? "Código copiado" : "Copiar código"}</button></div>
+              <div className="install-actions"><button className="primary-button" onClick={openTestPage}><Bot size={17} /> Probar en una página</button><button className="secondary-button" onClick={() => void copySnippet()}>{copied ? <Check size={17} /> : <Copy size={17} />}{copied ? "Código copiado" : "Copiar código"}</button><button className="secondary-button" onClick={() => void copyPrompt()}>{promptCopied ? <Check size={17} /> : <Code2 size={17} />}{promptCopied ? "Prompt copiado" : "Copiar prompt para IA"}</button></div>
               <div className="code-box"><code>{snippet}</code></div>
               <div className="install-notes"><span><Check size={16} /> Aparece como botón flotante</span><span><Check size={16} /> Funciona en celular</span><span><Check size={16} /> Lleva cierres a WhatsApp</span></div>
               <button className="secondary-button" onClick={() => setTab("config")}>Seguir editando</button>

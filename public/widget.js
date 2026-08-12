@@ -17,7 +17,9 @@
 
   try {
     var bytes = Uint8Array.from(window.atob(encoded), function (char) { return char.charCodeAt(0); });
-    config = Object.assign({}, defaults, JSON.parse(new TextDecoder().decode(bytes)));
+    var raw = JSON.parse(new TextDecoder().decode(bytes));
+    var expanded = raw.b ? { businessName: raw.b, agentName: raw.a, productName: raw.p, price: raw.r, description: raw.d, knowledge: raw.k, tone: raw.t, ctaLabel: raw.c, whatsapp: raw.w, instructions: raw.i, avatarData: raw.v } : raw;
+    config = Object.assign({}, defaults, expanded);
   } catch (_) {}
 
   var host = document.createElement("div");

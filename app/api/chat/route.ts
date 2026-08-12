@@ -25,17 +25,19 @@ function safeText(value: unknown, maxLength = 5000) {
 
 function normalizeConfig(value: unknown): AgentConfig {
   const input = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  const compact = { businessName: input.b, agentName: input.a, productName: input.p, price: input.r, description: input.d, knowledge: input.k, tone: input.t, ctaLabel: input.c, whatsapp: input.w, instructions: input.i, avatarData: input.v };
+  const source = Object.keys(input).some((key) => ["b", "a", "p", "r", "d", "k", "t", "c", "w", "i", "v"].includes(key)) ? compact : input;
   return {
-    agentName: safeText(input.agentName, 80) || "Tu asesor",
-    businessName: safeText(input.businessName, 120),
-    productName: safeText(input.productName, 160) || "el producto",
-    price: safeText(input.price, 100),
-    description: safeText(input.description, 1200),
-    knowledge: safeText(input.knowledge, 6000),
-    instructions: safeText(input.instructions, 18000),
-    tone: safeText(input.tone, 80) || "cercano y profesional",
-    ctaLabel: safeText(input.ctaLabel, 80) || "Hablar con un asesor",
-    whatsapp: safeText(input.whatsapp, 30).replace(/[^0-9]/g, ""),
+    agentName: safeText(source.agentName, 80) || "Tu asesor",
+    businessName: safeText(source.businessName, 120),
+    productName: safeText(source.productName, 160) || "el producto",
+    price: safeText(source.price, 100),
+    description: safeText(source.description, 1200),
+    knowledge: safeText(source.knowledge, 6000),
+    instructions: safeText(source.instructions, 18000),
+    tone: safeText(source.tone, 80) || "cercano y profesional",
+    ctaLabel: safeText(source.ctaLabel, 80) || "Hablar con un asesor",
+    whatsapp: safeText(source.whatsapp, 30).replace(/[^0-9]/g, ""),
   };
 }
 
