@@ -315,6 +315,7 @@ Requisitos:
               <p>Primero pruébalo en una página de ejemplo. Cuando te guste, copia el código y pégalo antes de cerrar la etiqueta <code>&lt;/body&gt;</code> de la página de tu cliente.</p>
               <div className="install-actions"><button className="primary-button" onClick={openTestPage}><Bot size={17} /> Probar en una página</button><button className="secondary-button" onClick={() => void copySnippet()}>{copied ? <Check size={17} /> : <Copy size={17} />}{copied ? "Código copiado" : "Copiar código"}</button><button className="secondary-button" onClick={() => void copyPrompt()}>{promptCopied ? <Check size={17} /> : <Code2 size={17} />}{promptCopied ? "Prompt copiado" : "Copiar prompt para IA"}</button></div>
               <div className="code-box"><code>{snippet}</code></div>
+              <div className="prompt-preview"><div className="prompt-preview-head"><strong>Prompt para instalar con IA</strong><button className="secondary-button" onClick={() => void copyPrompt()}>{promptCopied ? <Check size={15} /> : <Copy size={15} />}{promptCopied ? "Copiado" : "Copiar prompt"}</button></div><pre>{installPrompt}</pre></div>
               <div className="install-notes"><span><Check size={16} /> Aparece como botón flotante</span><span><Check size={16} /> Funciona en celular</span><span><Check size={16} /> Lleva cierres a WhatsApp</span></div>
               <button className="secondary-button" onClick={() => setTab("config")}>Seguir editando</button>
             </div>
