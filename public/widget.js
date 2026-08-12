@@ -50,6 +50,7 @@
 
   var identity = panel.querySelector(".cierra-id");
   var avatar = panel.querySelector(".cierra-avatar");
+  avatar.textContent = "";
   if (config.avatarData) { avatar.style.backgroundImage = "url('" + config.avatarData + "')"; avatar.style.backgroundSize = "cover"; avatar.style.backgroundPosition = "center"; } else { avatar.textContent = "→"; }
   identity.querySelector("strong").textContent = config.agentName;
   identity.querySelector("span").appendChild(document.createTextNode(" En línea · " + config.businessName));
