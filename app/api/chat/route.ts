@@ -5,6 +5,7 @@ type AgentConfig = {
   price?: string;
   description?: string;
   knowledge?: string;
+  instructions?: string;
   tone?: string;
   ctaLabel?: string;
   whatsapp?: string;
@@ -31,6 +32,7 @@ function normalizeConfig(value: unknown): AgentConfig {
     price: safeText(input.price, 100),
     description: safeText(input.description, 1200),
     knowledge: safeText(input.knowledge, 6000),
+    instructions: safeText(input.instructions, 18000),
     tone: safeText(input.tone, 80) || "cercano y profesional",
     ctaLabel: safeText(input.ctaLabel, 80) || "Hablar con un asesor",
     whatsapp: safeText(input.whatsapp, 30).replace(/[^0-9]/g, ""),
@@ -104,6 +106,7 @@ Información confirmada:
 - Precio: ${config.price || "no informado"}
 - Descripción: ${config.description || "no informada"}
 - Datos adicionales: ${config.knowledge || "no informados"}
+- Skills e instrucciones del negocio: ${config.instructions || "no informadas"}
 
 Objetivo: ayudar a la persona a decidir si el producto encaja, resolver objeciones y llevarla con naturalidad al siguiente paso de compra.
 

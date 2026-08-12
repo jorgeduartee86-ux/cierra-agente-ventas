@@ -25,6 +25,8 @@ type AgentConfig = {
   price: string;
   description: string;
   knowledge: string;
+  instructions: string;
+  avatarData: string;
   tone: string;
   ctaLabel: string;
   whatsapp: string;
@@ -41,6 +43,8 @@ const defaultConfig: AgentConfig = {
   price: "$129.000 COP",
   description: "incluye molino manual, prensa y una guía sencilla para preparar mejor café en casa.",
   knowledge: "Envío gratis en Colombia. Entrega estimada de 2 a 4 días hábiles. Pago con tarjeta, PSE o transferencia. Garantía de 30 días por defectos de fabricación.",
+  instructions: "",
+  avatarData: "",
   tone: "Cercano y experto",
   ctaLabel: "Comprar por WhatsApp",
   whatsapp: "573001234567",
@@ -70,6 +74,10 @@ function Brand({ inverse = false }: { inverse?: boolean }) {
       <span>cierra</span><b>.</b>
     </a>
   );
+}
+
+function AgentAvatar({ config, size = 21 }: { config: AgentConfig; size?: number }) {
+  return config.avatarData ? <img className="agent-avatar-image" src={config.avatarData} alt="Logo del negocio" /> : <Bot size={size} />;
 }
 
 function ChatPreview({ config, compact = false }: { config: AgentConfig; compact?: boolean }) {
@@ -121,7 +129,7 @@ function ChatPreview({ config, compact = false }: { config: AgentConfig; compact
   return (
     <div className={`chat-card ${compact ? "chat-card-compact" : ""}`} style={{ "--agent-accent": config.accent } as React.CSSProperties}>
       <div className="chat-topbar">
-        <div className="agent-photo"><Bot size={21} /></div>
+        <div className="agent-photo"><AgentAvatar config={config} /></div>
         <div className="chat-identity">
           <strong>{config.agentName}</strong>
           <span><i /> Asesor de {config.businessName}</span>
@@ -199,6 +207,19 @@ function ProductStudio() {
     window.setTimeout(() => setCopied(false), 1800);
   }
 
+  function readSkillFile(file: File) {
+    const reader = new FileReader();
+    reader.onload = () => setConfig((current) => ({ ...current, instructions: String(reader.result || "").slice(0, 18000) }));
+    reader.readAsText(file);
+  }
+
+  function readLogoFile(file: File) {
+    if (!file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = () => setConfig((current) => ({ ...current, avatarData: String(reader.result || "") }));
+    reader.readAsDataURL(file);
+  }
+
   function openTestPage() {
     const testWindow = window.open("", "_blank", "noopener,noreferrer");
     if (!testWindow) return;
@@ -245,10 +266,11 @@ function ProductStudio() {
                 <label>Tono<select value={config.tone} onChange={(event) => update("tone", event.target.value)}><option>Cercano y experto</option><option>Directo y ejecutivo</option><option>Cálido y paciente</option><option>Enérgico y juvenil</option></select><ChevronDown size={16} /></label>
                 <label className="wide">Descripción breve<textarea rows={3} value={config.description} onChange={(event) => update("description", event.target.value)} /></label>
                 <label className="wide">Datos que debe conocer<textarea rows={4} value={config.knowledge} onChange={(event) => update("knowledge", event.target.value)} placeholder="Envíos, pagos, garantía, cobertura, preguntas frecuentes…" /><span className="field-help"><ShieldCheck size={14} /> Si un dato no está aquí, el agente dirá que no lo sabe.</span></label>
+                <label className="wide upload-field"><span>Skills del vendedor (.md)</span><input type="file" accept=".md,text/markdown" onChange={(event) => { const file = event.target.files?.[0]; if (file) readSkillFile(file); }} /><span className="field-help"><Upload size={14} /> Sube reglas, descuentos, objeciones y cualquier instrucción comercial.</span>{config.instructions && <small className="file-ready">Archivo cargado y guardado en este navegador</small>}</label>
+                <label className="upload-field"><span>Logo o foto del asesor</span><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { const file = event.target.files?.[0]; if (file) readLogoFile(file); }} /><span className="field-help"><Upload size={14} /> Se mostrará en el chat en lugar del robot.</span>{config.avatarData && <img className="logo-thumb" src={config.avatarData} alt="Vista previa del logo" />}</label>
                 <label>Texto del cierre<input value={config.ctaLabel} onChange={(event) => update("ctaLabel", event.target.value)} /></label>
                 <label>WhatsApp<input value={config.whatsapp} onChange={(event) => update("whatsapp", event.target.value)} inputMode="tel" /></label>
               </div>
-              <div className="upload-row"><Upload size={20} /><div><strong>También podrás cargar documentos</strong><span>Catálogos, listas de precios y preguntas frecuentes</span></div><span className="coming">Próximamente</span></div>
               <button className="primary-button studio-next" onClick={() => setTab("test")}>Probar mi agente <ArrowRight size={18} /></button>
             </div>
           )}
