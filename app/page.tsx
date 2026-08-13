@@ -9,6 +9,7 @@ import {
   Code2,
   Copy,
   MessageCircle,
+  PhoneCall,
   Send,
   ShieldCheck,
   Sparkles,
@@ -30,6 +31,7 @@ type AgentConfig = {
   tone: string;
   ctaLabel: string;
   whatsapp: string;
+  phone: string;
   accent: string;
 };
 
@@ -48,6 +50,7 @@ const defaultConfig: AgentConfig = {
   tone: "Cercano y experto",
   ctaLabel: "Comprar por WhatsApp",
   whatsapp: "573001234567",
+  phone: "+57 300 123 4567",
   accent: "#ff5d3a",
 };
 
@@ -61,7 +64,7 @@ function apiUrl(path: string) {
 
 function encodeConfig(config: AgentConfig) {
   if (typeof window === "undefined") return "";
-  const compact = { b: config.businessName, a: config.agentName, p: config.productName, r: config.price, d: config.description, k: config.knowledge, t: config.tone, c: config.ctaLabel, w: config.whatsapp, i: config.instructions, v: config.avatarData };
+  const compact = { b: config.businessName, a: config.agentName, p: config.productName, r: config.price, d: config.description, k: config.knowledge, t: config.tone, c: config.ctaLabel, w: config.whatsapp, h: config.phone, i: config.instructions, v: config.avatarData };
   const bytes = new TextEncoder().encode(JSON.stringify(compact));
   let binary = "";
   bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
@@ -126,6 +129,8 @@ function ChatPreview({ config, compact = false }: { config: AgentConfig; compact
   const whatsappUrl = config.whatsapp
     ? `https://wa.me/${config.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola, me interesa ${config.productName}`)}`
     : "#";
+  const phoneUrl = config.phone ? `tel:${config.phone.replace(/[^\d+]/g, "")}` : "#";
+  const showContactActions = messages.some((message) => /siguiente paso|equipo|compra|comprar|llamar|llamada/i.test(message.content));
 
   return (
     <div className={`chat-card ${compact ? "chat-card-compact" : ""}`} style={{ "--agent-accent": config.accent } as React.CSSProperties}>
@@ -154,10 +159,11 @@ function ChatPreview({ config, compact = false }: { config: AgentConfig; compact
         {loading && <div className="bubble assistant typing"><i /><i /><i /></div>}
         <div ref={endRef} />
       </div>
-      {messages.some((message) => /siguiente paso|equipo|compra|comprar/i.test(message.content)) && config.whatsapp && (
-        <a className="chat-cta" href={whatsappUrl} target="_blank" rel="noreferrer">
-          <MessageCircle size={16} /> {config.ctaLabel}
-        </a>
+      {showContactActions && (config.whatsapp || config.phone) && (
+        <div className="chat-ctas">
+          {config.whatsapp && <a className="chat-cta" href={whatsappUrl} target="_blank" rel="noreferrer"><MessageCircle size={16} /> {config.ctaLabel}</a>}
+          {config.phone && <a className="chat-cta chat-call-cta" href={phoneUrl}><PhoneCall size={16} /> Llamar ahora</a>}
+        </div>
       )}
       <form className="chat-compose" onSubmit={submit}>
         <input value={input} onChange={(event) => setInput(event.target.value)} placeholder="Escribe tu pregunta…" aria-label="Mensaje para el asesor" />
@@ -293,6 +299,7 @@ Requisitos:
                 <label className="upload-field"><span>Logo o foto del asesor</span><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { const file = event.target.files?.[0]; if (file) readLogoFile(file); }} /><span className="field-help"><Upload size={14} /> Se mostrará en el chat en lugar del robot.</span>{config.avatarData && <img className="logo-thumb" src={config.avatarData} alt="Vista previa del logo" />}</label>
                 <label>Texto del cierre<input value={config.ctaLabel} onChange={(event) => update("ctaLabel", event.target.value)} /></label>
                 <label>WhatsApp<input value={config.whatsapp} onChange={(event) => update("whatsapp", event.target.value)} inputMode="tel" /></label>
+                <label>Teléfono para llamadas<input value={config.phone} onChange={(event) => update("phone", event.target.value)} inputMode="tel" placeholder="+57 300 123 4567" /><span className="field-help"><PhoneCall size={14} /> Al tocar “Llamar ahora” se abre el teléfono del cliente.</span></label>
               </div>
               <button className="primary-button studio-next" onClick={() => setTab("test")}>Probar mi agente <ArrowRight size={18} /></button>
             </div>
