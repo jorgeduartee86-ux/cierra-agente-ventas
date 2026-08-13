@@ -9,6 +9,7 @@ type AgentConfig = {
   tone?: string;
   ctaLabel?: string;
   whatsapp?: string;
+  phone?: string;
 };
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
@@ -25,7 +26,7 @@ function safeText(value: unknown, maxLength = 5000) {
 
 function normalizeConfig(value: unknown): AgentConfig {
   const input = value && typeof value === "object" ? value as Record<string, unknown> : {};
-  const compact = { businessName: input.b, agentName: input.a, productName: input.p, price: input.r, description: input.d, knowledge: input.k, tone: input.t, ctaLabel: input.c, whatsapp: input.w, instructions: input.i, avatarData: input.v };
+  const compact = { businessName: input.b, agentName: input.a, productName: input.p, price: input.r, description: input.d, knowledge: input.k, tone: input.t, ctaLabel: input.c, whatsapp: input.w, phone: input.h, instructions: input.i, avatarData: input.v };
   const source = Object.keys(input).some((key) => ["b", "a", "p", "r", "d", "k", "t", "c", "w", "i", "v"].includes(key)) ? compact : input;
   return {
     agentName: safeText(source.agentName, 80) || "Tu asesor",
@@ -38,6 +39,7 @@ function normalizeConfig(value: unknown): AgentConfig {
     tone: safeText(source.tone, 80) || "cercano y profesional",
     ctaLabel: safeText(source.ctaLabel, 80) || "Hablar con un asesor",
     whatsapp: safeText(source.whatsapp, 30).replace(/[^0-9]/g, ""),
+    phone: safeText(source.phone, 30),
   };
 }
 

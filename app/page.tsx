@@ -90,6 +90,9 @@ function ChatPreview({ config, compact = false }: { config: AgentConfig; compact
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [callOpen, setCallOpen] = useState(false);
+  const [callStatus, setCallStatus] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -129,8 +132,20 @@ function ChatPreview({ config, compact = false }: { config: AgentConfig; compact
   const whatsappUrl = config.whatsapp
     ? `https://wa.me/${config.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola, me interesa ${config.productName}`)}`
     : "#";
-  const phoneUrl = config.phone ? `tel:${config.phone.replace(/[^\d+]/g, "")}` : "#";
   const showContactActions = messages.some((message) => /siguiente paso|equipo|compra|comprar|llamar|llamada/i.test(message.content));
+
+  async function requestCall(event: FormEvent) {
+    event.preventDefault();
+    setCallStatus("Solicitando llamada…");
+    try {
+      const response = await fetch(apiUrl("/api/calls/request"), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ customerPhone, consent: true, config }) });
+      const data = await response.json() as { error?: string; message?: string };
+      if (!response.ok) throw new Error(data.error || "No pude iniciar la llamada.");
+      setCallStatus(data.message || "La llamada está iniciándose.");
+    } catch (error) {
+      setCallStatus(error instanceof Error ? error.message : "No pude iniciar la llamada.");
+    }
+  }
 
   return (
     <div className={`chat-card ${compact ? "chat-card-compact" : ""}`} style={{ "--agent-accent": config.accent } as React.CSSProperties}>
@@ -162,9 +177,10 @@ function ChatPreview({ config, compact = false }: { config: AgentConfig; compact
       {showContactActions && (config.whatsapp || config.phone) && (
         <div className="chat-ctas">
           {config.whatsapp && <a className="chat-cta" href={whatsappUrl} target="_blank" rel="noreferrer"><MessageCircle size={16} /> {config.ctaLabel}</a>}
-          {config.phone && <a className="chat-cta chat-call-cta" href={phoneUrl}><PhoneCall size={16} /> Llamar ahora</a>}
+          {config.phone && <button className="chat-cta chat-call-cta" type="button" onClick={() => setCallOpen(true)}><PhoneCall size={16} /> Que me llame</button>}
         </div>
       )}
+      {callOpen && <form className="call-request" onSubmit={requestCall}><strong>¿A qué número te llamamos?</strong><input value={customerPhone} onChange={(event) => setCustomerPhone(event.target.value)} placeholder="+57 300 123 4567" inputMode="tel" required /><label><input type="checkbox" required /> Acepto recibir esta llamada comercial.</label><button className="primary-button" type="submit"><PhoneCall size={15} /> Solicitar llamada</button>{callStatus && <span>{callStatus}</span>}</form>}
       <form className="chat-compose" onSubmit={submit}>
         <input value={input} onChange={(event) => setInput(event.target.value)} placeholder="Escribe tu pregunta…" aria-label="Mensaje para el asesor" />
         <button type="submit" disabled={!input.trim() || loading} aria-label="Enviar mensaje"><Send size={18} /></button>
